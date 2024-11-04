@@ -1,0 +1,13 @@
+//Sum of 2 numbers using fat arrow function
+
+const sum = (a,b) => a+b;
+console.log(sum(2,3));
+
+//Student Object
+const student = {
+    name: "Prasanth",
+    rollNo: 88,
+    gender: "Male"
+};
+
+console.log(student);
