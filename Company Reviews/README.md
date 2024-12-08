@@ -1,3 +1,3 @@
 # Company Feedback System Using Express and Node Frameworks
 
-### This is an fullstack app used for the rating the company based on his product review . Here we had used technology called HTML CSS bootstrap node js express js  and Mysql database.
+### This full-stack application allows users to rate companies based on their experience as reviews
