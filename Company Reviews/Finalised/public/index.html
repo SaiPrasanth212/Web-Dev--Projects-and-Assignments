@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Ratings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .rating-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Company Ratings</h1>
+    <form id="rating-form">
+        <h2>Submit a Review</h2>
+        <label>Company Name:</label><br>
+        <input type="text" id="company_name" required><br>
+        <label>Pros:</label><br>
+        <textarea id="pros" required></textarea><br>
+        <label>Cons:</label><br>
+        <textarea id="cons" required></textarea><br>
+        <label>Rating (1-5):</label><br>
+        <input type="number" id="rating" min="1" max="5" required><br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Search Ratings</h2>
+    <input type="text" id="search-company" placeholder="Enter company name">
+    <button id="search-button">Search</button>
+
+    <h2>All Ratings</h2>
+    <div id="ratings-container"></div>
+
+    <script>
+        const ratingForm = document.getElementById('rating-form');
+        const ratingsContainer = document.getElementById('ratings-container');
+        const searchButton = document.getElementById('search-button');
+        const searchCompany = document.getElementById('search-company');
+
+        // Fetch all ratings
+        const fetchRatings = async () => {
+            const response = await fetch('/api/ratings');
+            const ratings = await response.json();
+            displayRatings(ratings);
+        };
+
+        // Search ratings by company name
+        const searchRatings = async () => {
+            const companyName = searchCompany.value.trim();
+            if (!companyName) {
+                alert('Please enter a company name to search.');
+                return;
+            }
+            const response = await fetch(`/api/ratings/search?company_name=${encodeURIComponent(companyName)}`);
+            const ratings = await response.json();
+            displayRatings(ratings);
+        };
+
+        // Display ratings
+        const displayRatings = (ratings) => {
+            ratingsContainer.innerHTML = ratings.map(rating => `
+                <div class="rating-card">
+                    <h3>${rating.company_name}</h3>
+                    <p><strong>Pros:</strong> ${rating.pros}</p>
+                    <p><strong>Cons:</strong> ${rating.cons}</p>
+                    <p><strong>Rating:</strong> ${rating.rating}</p>
+                </div>
+            `).join('');
+        };
+
+        // Handle form submission
+        ratingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const company_name = document.getElementById('company_name').value;
+            const pros = document.getElementById('pros').value;
+            const cons = document.getElementById('cons').value;
+            const rating = document.getElementById('rating').value;
+
+            const response = await fetch('/api/ratings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ company_name, pros, cons, rating }),
+            });
+
+            if (response.ok) {
+                alert('Rating added successfully');
+                fetchRatings();
+            } else {
+                alert('Error adding rating');
+            }
+
+            ratingForm.reset();
+        });
+
+        // Search button event
+        searchButton.addEventListener('click', searchRatings);
+
+        // Initial load
+        fetchRatings();
+    </script>
+</body>
+</html>
