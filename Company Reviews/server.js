@@ -12,12 +12,12 @@ const connection =mysql.createConnection({
 });
 connection.connect((error)=>{
     if(error) throw error;
-    console.log(" connection is sucessfull" );
+    console.log(" connection is successful" );
 })
 
 app.get("/",(req,res)=>{
-    console.log("HEllo");
-    res.send('app runnig sucess');
+    console.log("Hello");
+    res.send('app running successfully');
 
 });
 app.listen(3000);
