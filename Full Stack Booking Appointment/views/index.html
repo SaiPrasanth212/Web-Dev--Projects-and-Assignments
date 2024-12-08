@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appointment Application</title>
+</head>
+
+<body style="margin: 0">
+  <!-- Write your code below -->
+  <form onsubmit="handleFormSubmit(event)" method="POST">
+    <label for="username">
+      Username
+      <input name="username" id="username" type="text"/>
+    </label>
+    <label for="email">
+      Email
+      <input name="email" id="email" type="email"/>
+    </label>
+    <label for="phone">
+      Phone number
+      <input name="phone" id="phone" type="tel"/>
+    </label>
+    <button type="submit">Submit</button>
+  </form>
+  <ul>
+  </ul>
+</body>
+<script src="./index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+</html>
