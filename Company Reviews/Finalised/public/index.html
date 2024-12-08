@@ -8,35 +8,73 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            background-color: #D3D3D3; /* Cement background */
+            color: #000; /* Black text color */
+        }
+        h1 {
+            text-align: center;
+            color: orange; /* Orange title */
         }
         .rating-card {
             border: 1px solid #ccc;
+            border-bottom: 2px solid #000; /* Add bottom line for separation */
             padding: 10px;
             margin: 10px 0;
             border-radius: 5px;
+            background-color: #fff;
+        }
+        .orange-text {
+            color: orange; /* Orange headers */
+        }
+        .stars {
+            display: flex;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .star {
+            font-size: 24px;
+            color: #008000; /* Green color for stars */
+            border: 2px solid #008000; /* Make stars hollow */
+            background-color: transparent;
+            display: inline-block;
+            text-align: center;
+            width: 1em;
+            height: 1em;
+            line-height: 1em;
+            border-radius: 50%; /* Change star color to orange-red */
+        }
+        .star.selected {
+            color: orange;
         }
     </style>
 </head>
 <body>
     <h1>Company Ratings</h1>
     <form id="rating-form">
-        <h2>Submit a Review</h2>
         <label>Company Name:</label><br>
         <input type="text" id="company_name" required><br>
         <label>Pros:</label><br>
         <textarea id="pros" required></textarea><br>
         <label>Cons:</label><br>
         <textarea id="cons" required></textarea><br>
-        <label>Rating (1-5):</label><br>
-        <input type="number" id="rating" min="1" max="5" required><br><br>
+        <label>Rating:</label><br>
+        <div id="star-container" class="stars">
+            <span class="star" data-value="1">&#9733;</span>
+            <span class="star" data-value="2">&#9733;</span>
+            <span class="star" data-value="3">&#9733;</span>
+            <span class="star" data-value="4">&#9733;</span>
+            <span class="star" data-value="5">&#9733;</span>
+        </div>
+        <input type="hidden" id="rating" required>
+        <br><br>
         <button type="submit">Submit</button>
     </form>
 
-    <h2>Search Ratings</h2>
+    <h2 class="orange-text">Search Ratings</h2>
     <input type="text" id="search-company" placeholder="Enter company name">
     <button id="search-button">Search</button>
 
-    <h2>All Ratings</h2>
+    <h2 class="orange-text">All Ratings</h2>
     <div id="ratings-container"></div>
 
     <script>
@@ -44,15 +82,37 @@
         const ratingsContainer = document.getElementById('ratings-container');
         const searchButton = document.getElementById('search-button');
         const searchCompany = document.getElementById('search-company');
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('rating');
 
-        // Fetch all ratings
-        const fetchRatings = async () => {
-            const response = await fetch('/api/ratings');
-            const ratings = await response.json();
-            displayRatings(ratings);
+        let selectedRating = 0;
+
+        // Handle star selection
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                selectedRating = star.getAttribute('data-value');
+                ratingInput.value = selectedRating;
+                updateStarColors(selectedRating);
+            });
+        });
+
+        const updateStarColors = (rating) => {
+            stars.forEach(star => {
+                const value = star.getAttribute('data-value');
+                if (value <= rating) {
+                    star.classList.add('selected');
+                } else {
+                    star.classList.remove('selected');
+                }
+            });
         };
 
-        // Search ratings by company name
+        // Fetch all ratings
+const fetchRatings = async () => {
+    ratingsContainer.innerHTML = ''; // Clear ratings container to hide reviews on homepage
+};
+
+// Search ratings by company name
         const searchRatings = async () => {
             const companyName = searchCompany.value.trim();
             if (!companyName) {
@@ -66,14 +126,30 @@
 
         // Display ratings
         const displayRatings = (ratings) => {
-            ratingsContainer.innerHTML = ratings.map(rating => `
-                <div class="rating-card">
-                    <h3>${rating.company_name}</h3>
-                    <p><strong>Pros:</strong> ${rating.pros}</p>
-                    <p><strong>Cons:</strong> ${rating.cons}</p>
-                    <p><strong>Rating:</strong> ${rating.rating}</p>
-                </div>
-            `).join('');
+            const companyRatings = {};
+            ratings.forEach(rating => {
+                if (!companyRatings[rating.company_name]) {
+                    companyRatings[rating.company_name] = [];
+                }
+                companyRatings[rating.company_name].push(rating.rating);
+            });
+
+            ratingsContainer.innerHTML = Object.keys(companyRatings).map(company => {
+                const averageRating = (companyRatings[company].reduce((sum, r) => sum + r, 0) / companyRatings[company].length).toFixed(1);
+                return `
+                    <div class="rating-card">
+                        <h3>${company}</h3>
+                        <p><strong class="orange-text">Company Rating:</strong> ${averageRating}</p>
+                        ${ratings.filter(r => r.company_name === company).map(r => `
+                            <div style="border-bottom: 1px solid #ccc;">
+                                <p><strong class="orange-text">Pros:</strong> ${r.pros}</p>
+                                <p><strong class="orange-text">Cons:</strong> ${r.cons}</p>
+                                <p><strong class="orange-text">User Rating:</strong> ${r.rating}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
         };
 
         // Handle form submission
@@ -82,14 +158,18 @@
             const company_name = document.getElementById('company_name').value;
             const pros = document.getElementById('pros').value;
             const cons = document.getElementById('cons').value;
-            const rating = document.getElementById('rating').value;
+
+            if (!selectedRating) {
+                alert('Please select a rating.');
+                return;
+            }
 
             const response = await fetch('/api/ratings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ company_name, pros, cons, rating }),
+                body: JSON.stringify({ company_name, pros, cons, rating: selectedRating }),
             });
 
             if (response.ok) {
@@ -100,6 +180,7 @@
             }
 
             ratingForm.reset();
+            updateStarColors(0);
         });
 
         // Search button event
@@ -110,3 +191,4 @@
     </script>
 </body>
 </html>
+
