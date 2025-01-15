@@ -48,8 +48,10 @@ document.getElementById('login-form')?.addEventListener('submit', async function
     });
 
     if (response.ok) {
+        const data = await response.json();
         alert('Login successful! Redirecting to expense tracker...');
         localStorage.setItem('loggedIn', 'true'); // Set login status in localStorage
+        localStorage.setItem('userID', data.userID); // Store userID in localStorage
         window.location.href = 'index.html'; // Redirect to expense tracker
     } else {
         const error = await response.json();
@@ -64,13 +66,14 @@ document.getElementById('expense-form')?.addEventListener('submit', async functi
     const amount = document.getElementById('amount').value;
     const description = document.getElementById('description').value;
     const category = document.getElementById('category').value;
+    const userID = localStorage.getItem('userID'); // Get userID from localStorage
 
     const response = await fetch('/api/expenses', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ amount, description, category })
+        body: JSON.stringify({ amount, description, category, userID })
     });
 
     if (response.ok) {
@@ -85,7 +88,8 @@ document.getElementById('expense-form')?.addEventListener('submit', async functi
 
 // Load Expenses Function
 async function loadExpenses() {
-    const response = await fetch('/api/expenses');
+    const userID = localStorage.getItem('userID'); // Get userID from localStorage
+    const response = await fetch(`/api/expenses/${userID}`);
     const expenses = await response.json();
     const expenseList = document.getElementById('expense-list');
     expenseList.innerHTML = '';
@@ -93,6 +97,24 @@ async function loadExpenses() {
     expenses.forEach(expense => {
         const li = document.createElement('li');
         li.textContent = `${expense.description} - $${expense.amount} (${expense.category})`;
+        
+        // Create a delete button
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = async () => {
+            const deleteResponse = await fetch(`/api/expenses/${expense.id}/${userID}`, {
+                method: 'DELETE'
+            });
+            if (deleteResponse.ok) {
+                alert('Expense deleted successfully!');
+                loadExpenses(); // Reload expenses
+            } else {
+                const error = await deleteResponse.json();
+                alert(error.message);
+            }
+        };
+        
+        li.appendChild(deleteButton);
         expenseList.appendChild(li);
     });
 }
